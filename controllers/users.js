@@ -15,12 +15,12 @@ const getUser = async (req, res) => {
     const user = await User.findById(id);
 
     if (!user) {
-      return res.status(404).send({ message: "Пользоватеь не найден" });
+      return res.status(404).send({ message: "Пользователь не найден" });
     }
     return res.status(200).send(user);
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ message: "произошла ошибка" });
+    return res.status(400).json({ message: "произошла ошибка" });
   }
 };
 const createUser = async (req, res) => {
@@ -36,6 +36,9 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const newUser = await User.findByIdAndUpdate(req.user._id, {name: req.body.name, about: req.body.about});
+    if (req.body.name.length < 2 || req.body.about.length <2) {
+      return res.status(400).json({ message: errors.join(", ") });
+    }
     return res.status(200).send(newUser);
   } catch (e) {
     const errors = Object.values(e.errors).map((err) => err.message);

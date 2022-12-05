@@ -6,7 +6,7 @@ const getAllCards = async (req, res) => {
     return res.status(200).send(cards);
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ message: "произошла ошибка" });
+    return res.status(400).json({ message: "произошла ошибка" });
   }
 };
 const deleteCard = async (req, res) => {
