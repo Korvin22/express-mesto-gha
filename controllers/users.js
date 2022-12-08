@@ -26,6 +26,9 @@ const getUser = async (req, res) => {
   } catch (e) {
     if (e.name === "ValidationError") {
       getValidationError(res, "Данные введены не корректно");
+    }
+    if (e.name === "CastError") {
+      getValidationError(res, "Данные введены не корректно");
     } else {
       getDefaultError(res);
     }
