@@ -65,7 +65,7 @@ const likeCard = async (req, res) => {
     }
     return res.status(200).send(newCard);
   } catch (e) {
-    if (e.name === "ValidationError") {
+    if (e.name === "CastError") {
       getValidationError(res, "Данные введены не корректно");
     } else {
       return res.status(500).json({ message: "произошла ошибка" });
@@ -85,7 +85,7 @@ const dislikeCard = async (req, res) => {
     }
     return res.status(200).send(newCard);
   } catch (e) {
-    if (e.name === "ValidationError") {
+    if (e.name === "CastError") {
       getValidationError(res, "Данные введены не корректно");
     } else {
       return res.status(500).json({ message: "произошла ошибка" });
