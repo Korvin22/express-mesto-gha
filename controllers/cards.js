@@ -1,9 +1,10 @@
-const Card = require("../models/card");
+/* eslint-disable consistent-return */
+const Card = require('../models/card');
 const {
   getValidationError,
   getDefaultError,
   getNotFoundError,
-} = require("../constants/errors");
+} = require('../constants/errors');
 
 const getAllCards = async (req, res) => {
   try {
@@ -24,7 +25,7 @@ const deleteCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (e) {
-    if (e.name === "CastError") {
+    if (e.name === 'CastError') {
       getValidationError(res, "Данный введены не корректно");
     } else {
       getDefaultError(res);
@@ -67,7 +68,7 @@ const likeCard = async (req, res) => {
     if (e.name === "CastError") {
       getValidationError(res, "Данные введены не корректно");
     } else {
-      getDefaultError(res);
+      return res.status(500).json({ message: "произошла ошибка" });
     }
   }
 };
