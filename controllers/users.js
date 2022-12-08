@@ -1,4 +1,9 @@
 const User = require("../models/user");
+const {
+  getValidationError,
+  getDefaultError,
+  getNotFoundError,
+} = require("../constants/errors");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -6,7 +11,7 @@ const getAllUsers = async (req, res) => {
     return res.status(200).send(users);
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ message: "произошла ошибка" });
+    getDefaultError(res)
   }
 };
 const getUser = async (req, res) => {
@@ -19,8 +24,11 @@ const getUser = async (req, res) => {
     }
     return res.status(200).send(user);
   } catch (e) {
-    console.error(e);
-    return res.status(400).json({ message: "произошла ошибка" });
+    if (e.name === "CastError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 const createUser = async (req, res) => {
@@ -28,31 +36,45 @@ const createUser = async (req, res) => {
     const user = await User.create(req.body);
     return res.status(200).send(user);
   } catch (e) {
-    const errors = Object.values(e.errors).map((err) => err.message);
-    return res.status(400).json({ message: errors.join(", ") });
+    if (e.name === "CastError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 
 const updateUser = async (req, res) => {
   try {
-    const newUser = await User.findByIdAndUpdate(req.user._id, {name: req.body.name, about: req.body.about});
-    if (req.body.name.length < 2 || req.body.about.length <2) {
-      return res.status(400).json({ message: errors.join(", ") });
-    }
+    const newUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { name: req.body.name, about: req.body.about },
+      { new: true, runValidators: true }
+    );
     return res.status(200).send(newUser);
   } catch (e) {
-    const errors = Object.values(e.errors).map((err) => err.message);
-    return res.status(400).json({ message: errors.join(", ") });
+    if (e.name === "ValidationError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 
 const updateAvatar = async (req, res) => {
   try {
-    const newUser = await User.findByIdAndUpdate(req.user._id, {avatar: req.body.avatar});
+    const newUser = await User.findByIdAndUpdate(req.user._id, {
+      avatar: req.body.avatar,
+    }, { new: true, runValidators: true });
     return res.status(200).send(newUser);
   } catch (e) {
-    const errors = Object.values(e.errors).map((err) => err.message);
-    return res.status(400).json({ message: errors.join(", ") });
+    /*const errors = Object.values(e.errors).map((err) => err.message);
+    return res.status(400).json({ message: errors.join(", ") });*/
+    if (e.name === "ValidationError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 
@@ -61,5 +83,5 @@ module.exports = {
   getUser,
   createUser,
   updateUser,
-  updateAvatar
+  updateAvatar,
 };

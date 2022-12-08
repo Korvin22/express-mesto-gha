@@ -12,5 +12,7 @@ router.delete("/cards/:cardId", deleteCard);
 router.post("/cards", createCard);
 router.put("/cards/:cardId/likes", likeCard);
 router.delete("/cards/:cardId/likes", dislikeCard)
-
+router.use((req, res) => {
+  return res.status(404).send({ message: "Роут не найден" });
+  });
 module.exports = router;

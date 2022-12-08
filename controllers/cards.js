@@ -1,12 +1,17 @@
 const Card = require("../models/card");
-console.log(Card);
+const {
+  getValidationError,
+  getDefaultError,
+  getNotFoundError,
+} = require("../constants/errors");
+
 const getAllCards = async (req, res) => {
   try {
     const cards = await Card.find({});
     return res.status(200).send(cards);
   } catch (e) {
     console.error(e);
-    return res.status(400).json({ message: "произошла ошибка" });
+    getDefaultError(res);
   }
 };
 const deleteCard = async (req, res) => {
@@ -15,25 +20,35 @@ const deleteCard = async (req, res) => {
     const card = await Card.findByIdAndRemove(req.params.cardId);
 
     if (!card) {
-      return res.status(404).send({ message: "Карточка не найден" });
+      getNotFoundError(res, "Карточка не найдена");
     }
     return res.status(200).send(card);
   } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: "произошла ошибка" });
+    if (e.name === "CastError") {
+      getValidationError(res, "Данный введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 const createCard = async (req, res) => {
   try {
     console.log(req.user._id);
-    const card = await Card.create(req.body);
+    const card = await Card.create({
+      name: req.body.name,
+      link: req.body.link,
+      owner: req.user._id,
+    });
     if (!card) {
-      return res.status(404).send({ message: "Карточка не найден" });
+      getNotFoundError(res, "Карточка не найдена");
     }
     return res.status(200).send(card);
   } catch (e) {
-    const errors = Object.values(e.errors).map((err) => err.message);
-    return res.status(400).json({ message: errors.join(", ") });
+    if (e.name === "ValidationError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 
@@ -44,9 +59,16 @@ const likeCard = async (req, res) => {
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
       { new: true }
     );
+    if (!newCard) {
+      getNotFoundError(res, "Карточка не найдена");
+    }
     return res.status(200).send(newCard);
   } catch (e) {
-    return res.status(500).json({ message: "произошла ошибка" });
+    if (e.name === "CastError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      getDefaultError(res);
+    }
   }
 };
 
@@ -57,9 +79,16 @@ const dislikeCard = async (req, res) => {
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true }
     );
+    if (!newCard) {
+      getNotFoundError(res, "Карточка не найдена");
+    }
     return res.status(200).send(newCard);
   } catch (e) {
-    return res.status(500).json({ message: "произошла ошибка" });
+    if (e.name === "CastError") {
+      getValidationError(res, "Данные введены не корректно");
+    } else {
+      return res.status(500).json({ message: "произошла ошибка" });
+    }
   }
 };
 
