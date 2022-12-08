@@ -25,7 +25,7 @@ const deleteCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (e) {
-    if (e.name === 'ValidationError') {
+    if (e.name === 'CastError') {
       getValidationError(res, "Данный введены не корректно");
     } else {
       getDefaultError(res);

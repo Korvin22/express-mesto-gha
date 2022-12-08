@@ -20,11 +20,11 @@ const getUser = async (req, res) => {
     const user = await User.findById(id);
 
     if (!user) {
-      return res.status(404).send({ message: "Пользователь не найден" });
+      getNotFoundError(res, "Пользователь не найден")
     }
     return res.status(200).send(user);
   } catch (e) {
-    if (e.name === "CastError") {
+    if (e.name === "ValidationError") {
       getValidationError(res, "Данные введены не корректно");
     } else {
       getDefaultError(res);
@@ -36,7 +36,7 @@ const createUser = async (req, res) => {
     const user = await User.create(req.body);
     return res.status(200).send(user);
   } catch (e) {
-    if (e.name === "CastError") {
+    if (e.name === "ValidationError") {
       getValidationError(res, "Данные введены не корректно");
     } else {
       getDefaultError(res);
@@ -70,7 +70,7 @@ const updateAvatar = async (req, res) => {
   } catch (e) {
     /*const errors = Object.values(e.errors).map((err) => err.message);
     return res.status(400).json({ message: errors.join(", ") });*/
-    if (e.name === "ValidationError") {
+        if (e.name === "ValidationError") {
       getValidationError(res, "Данные введены не корректно");
     } else {
       getDefaultError(res);
