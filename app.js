@@ -29,7 +29,7 @@ app.post('/signin', celebrate({
     about: Joi.string().required().min(2).max(30),
     avatar: Joi.string().required().min(2),
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(),
+    password: Joi.string().required(),
   }),
 }), login);
 app.post('/signup', celebrate({
@@ -38,7 +38,7 @@ app.post('/signup', celebrate({
     about: Joi.string().required().min(2).max(30),
     avatar: Joi.string().required().min(2),
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(),
+    password: Joi.string().required(),
   }),
 }), createUser);
 
