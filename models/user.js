@@ -25,12 +25,10 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     validate: [isEmail, 'invalid email'],
   },
   password: {
     type: String,
-    required: true,
     select: false,
   },
 });

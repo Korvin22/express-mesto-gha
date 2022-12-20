@@ -72,15 +72,17 @@ const createUser = async (req, res, next) => {
     const { email, password } = body;
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ email, password: hash });
+    console.log(user);
     return res.status(200).send({ _id: user._id });
   } catch (e) {
     if (e.name === 'ValidationError') {
-      getValidationError(res, 'Данные введены не корректно');
+      console.log(e.message);
+      return getValidationError(res, 'Данные введены не корректно');
     }
     if (e.code === 11000) {
       getWrongData(res, 'Почта или пароль введены не верно');
     } else {
-      getDefaultError(res);
+      return getDefaultError(res);
     }
     next();
   }

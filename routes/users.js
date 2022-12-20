@@ -12,24 +12,24 @@ router.get('/:id', celebrate({
 }), getUser);
 router.post('/', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().required().min(2),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().min(2),
   }),
 }), createUser);
 router.patch('/me', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().required().min(2),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().min(2),
   }),
 }), updateUser);
 router.get('/me', getCurrentUser);
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().required().min(2),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().min(2),
   }),
 }), updateAvatar);
 
