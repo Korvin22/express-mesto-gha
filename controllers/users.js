@@ -1,21 +1,29 @@
 /* eslint-disable comma-dangle */
 /* eslint-disable consistent-return */
+const bcrypt = require('bcrypt');
 const User = require('../models/user');
+
 const {
   getValidationError,
   getDefaultError,
   getNotFoundError,
+  getWrongData
 } = require('../constants/errors');
 
-const getAllUsers = async (req, res) => {
+const {
+  generateToken
+} = require('../middlewares/auth');
+
+const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
     return res.status(200).send(users);
   } catch (e) {
     getDefaultError(res);
+    next();
   }
 };
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
   const { id } = req.params;
   try {
     const user = await User.findById(id);
@@ -33,22 +41,52 @@ const getUser = async (req, res) => {
     } else {
       getDefaultError(res);
     }
+    next();
   }
 };
-const createUser = async (req, res) => {
+
+const getCurrentUser = async (req, res, next) => {
   try {
-    const user = await User.create(req.body);
+    const user = await User.find();
+
+    if (!user) {
+      getNotFoundError(res, 'Пользователь не найден');
+    }
     return res.status(200).send(user);
   } catch (e) {
     if (e.name === 'ValidationError') {
       getValidationError(res, 'Данные введены не корректно');
+    }
+    if (e.name === 'CastError') {
+      getValidationError(res, 'Данные введены не корректно');
     } else {
       getDefaultError(res);
     }
+    next();
   }
 };
 
-const updateUser = async (req, res) => {
+const createUser = async (req, res, next) => {
+  try {
+    const body = { ...req.body };
+    const { email, password } = body;
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({ email, password: hash });
+    return res.status(200).send({ _id: user._id });
+  } catch (e) {
+    if (e.name === 'ValidationError') {
+      getValidationError(res, 'Данные введены не корректно');
+    }
+    if (e.code === 11000) {
+      getWrongData(res, 'Почта или пароль введены не верно');
+    } else {
+      getDefaultError(res);
+    }
+    next();
+  }
+};
+
+const updateUser = async (req, res, next) => {
   try {
     const newUser = await User.findByIdAndUpdate(
       req.user._id,
@@ -58,14 +96,15 @@ const updateUser = async (req, res) => {
     return res.status(200).send(newUser);
   } catch (e) {
     if (e.name === 'ValidationError') {
-      getValidationError(res, 'Данные введены не корректно');
+      getValidationError(res, e);
     } else {
       getDefaultError(res);
     }
+    next();
   }
 };
 
-const updateAvatar = async (req, res) => {
+const updateAvatar = async (req, res, next) => {
   try {
     const newUser = await User.findByIdAndUpdate(req.user._id, {
       avatar: req.body.avatar,
@@ -79,6 +118,27 @@ const updateAvatar = async (req, res) => {
     } else {
       getDefaultError(res);
     }
+    next();
+  }
+};
+
+const login = async (req, res, next) => {
+  const body = { ...req.body };
+  const { email, password } = body;
+  try {
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return getValidationError(res, 'Неверный логин или пароль');
+    }
+    const result = await bcrypt.compare(password, user.password);
+    if (result) {
+      const payload = { _id: user._id };
+      const token = generateToken(payload);
+      return res.status(200).json({ token });
+    }
+  } catch (e) {
+    getDefaultError(res);
+    next();
   }
 };
 
@@ -88,4 +148,6 @@ module.exports = {
   createUser,
   updateUser,
   updateAvatar,
+  login,
+  getCurrentUser,
 };

@@ -5,19 +5,35 @@ const {
   getDefaultError,
   getNotFoundError,
 } = require('../constants/errors');
+const { decodeToken } = require('../middlewares/auth');
 
-const getAllCards = async (req, res) => {
+const getAllCards = async (req, res, next) => {
   try {
     const cards = await Card.find({});
     return res.status(200).send(cards);
   } catch (e) {
     getDefaultError(res);
+    next();
   }
 };
-const deleteCard = async (req, res) => {
+const deleteCard = async (req, res, next) => {
+  const { authorization } = req.headers;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ message: 'Необходима авторизация' });
+  }
+  const token = authorization.replace('Bearer ', '');
   try {
+    const ownerId = decodeToken(token);
+    const { cardId } = req.params;
+    console.log(ownerId, cardId);
+    if (cardId !== ownerId) {
+      return res
+        .status(403)
+        .send({ message: 'Невозможно удалить карточку другого пользователя' });
+    }
     const card = await Card.findByIdAndRemove(req.params.cardId);
-
     if (!card) {
       getNotFoundError(res, 'Карточка не найдена');
     }
@@ -28,9 +44,10 @@ const deleteCard = async (req, res) => {
     } else {
       getDefaultError(res);
     }
+    next();
   }
 };
-const createCard = async (req, res) => {
+const createCard = async (req, res, next) => {
   try {
     const card = await Card.create({
       name: req.body.name,
@@ -47,10 +64,11 @@ const createCard = async (req, res) => {
     } else {
       getDefaultError(res);
     }
+    next();
   }
 };
 
-const likeCard = async (req, res) => {
+const likeCard = async (req, res, next) => {
   try {
     const newCard = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -67,10 +85,11 @@ const likeCard = async (req, res) => {
     } else {
       return res.status(500).json({ message: 'произошла ошибка' });
     }
+    next();
   }
 };
 
-const dislikeCard = async (req, res) => {
+const dislikeCard = async (req, res, next) => {
   try {
     const newCard = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -87,6 +106,7 @@ const dislikeCard = async (req, res) => {
     } else {
       return res.status(500).json({ message: 'произошла ошибка' });
     }
+    next();
   }
 };
 
