@@ -4,10 +4,10 @@ const bcrypt = require('bcrypt');
 const User = require('../models/user');
 
 const {
-  getValidationError,
-  getDefaultError,
-  getNotFoundError,
-  getWrongData
+  ValidationError,
+  NotFoundError,
+  WrongData,
+  AuthorizationError,
 } = require('../constants/errors');
 
 const {
@@ -19,8 +19,7 @@ const getAllUsers = async (req, res, next) => {
     const users = await User.find({});
     return res.status(200).send(users);
   } catch (e) {
-    getDefaultError(res);
-    next();
+    next(e);
   }
 };
 const getUser = async (req, res, next) => {
@@ -29,19 +28,17 @@ const getUser = async (req, res, next) => {
     const user = await User.findById(id);
 
     if (!user) {
-      getNotFoundError(res, 'Пользователь не найден');
+      throw new NotFoundError('пользователь не найден');
     }
     return res.status(200).send(user);
   } catch (e) {
     if (e.name === 'ValidationError') {
-      getValidationError(res, 'Данные введены не корректно');
+      next(new ValidationError('Данные введены неправильно'));
     }
     if (e.name === 'CastError') {
-      getValidationError(res, 'Данные введены не корректно');
-    } else {
-      getDefaultError(res);
+      next(new ValidationError('Данные введены неправильно'));
     }
-    next();
+    next(e);
   }
 };
 
@@ -50,19 +47,16 @@ const getCurrentUser = async (req, res, next) => {
     const user = await User.find();
 
     if (!user) {
-      getNotFoundError(res, 'Пользователь не найден');
+      throw new NotFoundError('Пользователь не найден');
     }
     return res.status(200).send(user);
   } catch (e) {
     if (e.name === 'ValidationError') {
-      getValidationError(res, 'Данные введены не корректно');
+      next(new ValidationError('Данные введены не корректно'));
     }
     if (e.name === 'CastError') {
-      getValidationError(res, 'Данные введены не корректно');
-    } else {
-      getDefaultError(res);
-    }
-    next();
+      next(new ValidationError('Данные введены не корректно'));
+    } next(e);
   }
 };
 
@@ -75,16 +69,17 @@ const createUser = async (req, res, next) => {
     console.log(user);
     return res.status(200).send({ _id: user._id });
   } catch (e) {
+    console.log(e);
     if (e.name === 'ValidationError') {
-      console.log(e.message);
-      return getValidationError(res, 'Данные введены не корректно');
+      next(new ValidationError('Данные введены не корректно'));
+      return;
     }
+    /* ошибку прописал, но при одинаковом email ee не ловит, не могу понять почему */
     if (e.code === 11000) {
-      getWrongData(res, 'Почта или пароль введены не верно');
-    } else {
-      return getDefaultError(res);
+      next(new WrongData('Почта или пароль введены не верно'));
+      return;
     }
-    next();
+    next(e);
   }
 };
 
@@ -98,11 +93,9 @@ const updateUser = async (req, res, next) => {
     return res.status(200).send(newUser);
   } catch (e) {
     if (e.name === 'ValidationError') {
-      getValidationError(res, e);
-    } else {
-      getDefaultError(res);
-    }
-    next();
+      next(new ValidationError('Данные введены не корректно'));
+      return;
+    } next(e);
   }
 };
 
@@ -116,11 +109,9 @@ const updateAvatar = async (req, res, next) => {
     /* const errors = Object.values(e.errors).map((err) => err.message);
     return res.status(400).json({ message: errors.join(", ") }); */
     if (e.name === 'ValidationError') {
-      getValidationError(res, 'Данные введены не корректно');
-    } else {
-      getDefaultError(res);
-    }
-    next();
+      next(new ValidationError('Данные введены не корректно'));
+      return;
+    } next(e);
   }
 };
 
@@ -130,7 +121,7 @@ const login = async (req, res, next) => {
   try {
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return getValidationError(res, 'Неверный логин или пароль');
+      throw new AuthorizationError('Неверные логин или пароль');
     }
     const result = await bcrypt.compare(password, user.password);
     if (result) {
@@ -139,8 +130,7 @@ const login = async (req, res, next) => {
       return res.status(200).json({ token });
     }
   } catch (e) {
-    getDefaultError(res);
-    next();
+    next(e);
   }
 };
 

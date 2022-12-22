@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -5,6 +6,9 @@ const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
 const routerUsers = require('./routes/users');
 const routerCards = require('./routes/cards');
+const {
+  NotFoundError,
+} = require('./constants/errors');
 
 const {
   createUser, login,
@@ -17,10 +21,6 @@ const app = express();
 /* app.use(express.static(path.join(__dirnamey, 'public'))); */
 app.use(bodyParser.json());
 app.use(errors()); // обработчик ошибок celebrate
-app.use((err, req, res, next) => {
-  res.status(err.statusCode).send({ message: err.message });
-  return next();
-});
 
 app.use('/users', checkAuth, routerUsers);
 app.use('/cards', checkAuth, routerCards);
@@ -29,7 +29,7 @@ app.post('/signin', celebrate({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().min(2),
-    email: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
 }), login);
@@ -38,11 +38,27 @@ app.post('/signup', celebrate({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().min(2),
-    email: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
 }), createUser);
+app.use((err, req, res, next) => {
+  // если у ошибки нет статуса, выставляем 500
+  const { statusCode = 500, message } = err;
 
+  res
+    .status(statusCode)
+    .send({
+      // проверяем статус и выставляем сообщение в зависимости от него
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+  return next();
+});
+
+routerUsers.use((req, res) => { throw new NotFoundError('Роут не найден'); });
+routerCards.use((req, res) => { throw new NotFoundError('Роут не найден'); });
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
 }, () => {

@@ -1,9 +1,10 @@
 /* eslint-disable consistent-return */
 const Card = require('../models/card');
 const {
-  getValidationError,
-  getDefaultError,
-  getNotFoundError,
+  ValidationError,
+  NotFoundError,
+  AuthorizationError,
+  RightsError,
 } = require('../constants/errors');
 const { decodeToken } = require('../middlewares/auth');
 
@@ -12,16 +13,13 @@ const getAllCards = async (req, res, next) => {
     const cards = await Card.find({});
     return res.status(200).send(cards);
   } catch (e) {
-    getDefaultError(res);
-    next();
+    next(e);
   }
 };
 const deleteCard = async (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization) {
-    return res
-      .status(401)
-      .send({ message: 'Необходима авторизация' });
+    throw new AuthorizationError('Необходима авторизация!!');
   }
   const token = authorization.replace('Bearer ', '');
   try {
@@ -29,22 +27,18 @@ const deleteCard = async (req, res, next) => {
     const { cardId } = req.params;
     console.log(ownerId, cardId);
     if (cardId !== ownerId) {
-      return res
-        .status(403)
-        .send({ message: 'Невозможно удалить карточку другого пользователя' });
+      throw new RightsError('Невозможно удалить карточку другого пользователя');
     }
     const card = await Card.findByIdAndRemove(req.params.cardId);
     if (!card) {
-      getNotFoundError(res, 'Карточка не найдена');
+      throw new NotFoundError('Карточка не найдена');
     }
     return res.status(200).send(card);
   } catch (e) {
     if (e.name === 'CastError') {
-      getValidationError(res, 'Данный введены не корректно');
-    } else {
-      getDefaultError(res);
+      next(new ValidationError('Данные введены неправильно'));
     }
-    next();
+    next(e);
   }
 };
 const createCard = async (req, res, next) => {
@@ -55,16 +49,14 @@ const createCard = async (req, res, next) => {
       owner: req.user._id,
     });
     if (!card) {
-      getNotFoundError(res, 'Карточка не найдена');
+      throw new NotFoundError('Карточка не найдена');
     }
     return res.status(200).send(card);
   } catch (e) {
     if (e.name === 'ValidationError') {
-      getValidationError(res, 'Данные введены не корректно');
-    } else {
-      getDefaultError(res);
+      next(new ValidationError('Данные введены неправильно'));
     }
-    next();
+    next(e);
   }
 };
 
@@ -76,16 +68,14 @@ const likeCard = async (req, res, next) => {
       { new: true },
     );
     if (!newCard) {
-      getNotFoundError(res, 'Карточка не найдена');
+      throw new NotFoundError('Карточка не найдена');
     }
     return res.status(200).send(newCard);
   } catch (e) {
     if (e.name === 'CastError') {
-      getValidationError(res, 'Данные введены не корректно');
-    } else {
-      return res.status(500).json({ message: 'произошла ошибка' });
+      next(new ValidationError('Данные введены неправильно'));
     }
-    next();
+    next(e);
   }
 };
 
@@ -97,16 +87,14 @@ const dislikeCard = async (req, res, next) => {
       { new: true },
     );
     if (!newCard) {
-      getNotFoundError(res, 'Карточка не найдена');
+      throw new NotFoundError('Карточка не найдена');
     }
     return res.status(200).send(newCard);
   } catch (e) {
     if (e.name === 'CastError') {
-      getValidationError(res, 'Данные введены не корректно');
-    } else {
-      return res.status(500).json({ message: 'произошла ошибка' });
+      next(new ValidationError('Данные введены неправильно'));
     }
-    next();
+    next(e);
   }
 };
 

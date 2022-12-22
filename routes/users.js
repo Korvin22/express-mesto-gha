@@ -7,7 +7,7 @@ const {
 router.get('/', getAllUsers);
 router.get('/:id', celebrate({
   body: Joi.object().keys({
-    userId: Joi.string().alphanum().length(24),
+    userId: Joi.string().required().length(24).hex(),
   }),
 }), getUser);
 router.post('/', celebrate({

@@ -8,7 +8,7 @@ const {
 router.get('/', getAllCards);
 router.delete('/:cardId', celebrate({
   body: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().required().length(24).hex(),
   }),
 }), deleteCard);
 router.post('/', celebrate({
@@ -19,14 +19,13 @@ router.post('/', celebrate({
 }), createCard);
 router.put('/:cardId/likes', celebrate({
   body: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().required().length(24).hex(),
   }),
 }), likeCard);
 router.delete('/:cardId/likes', celebrate({
   body: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().required().length(24).hex(),
   }),
 }), dislikeCard);
 
-router.use((req, res) => res.status(404).send({ message: 'Роут не найден' }));
 module.exports = router;

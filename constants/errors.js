@@ -1,19 +1,48 @@
-function getValidationError(res, userMessage) {
-  return res.status(400).send({ message: userMessage });
+/* eslint-disable max-len */
+/* eslint-disable max-classes-per-file */
+
+class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 400;
+  }
 }
 
-function getNotFoundError(res, userMessage) {
-  return res.status(404).send({ message: userMessage });
+class NotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 404;
+  }
 }
 
-function getWrongData(res, userMessage) {
-  return res.status(409).send({ message: userMessage });
+class WrongData extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 409;
+  }
 }
 
-function getDefaultError(res) {
-  return res.status(500).json({ message: 'произошла ошибка' });
+class DefaultError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 500;
+  }
+}
+
+class AuthorizationError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 401;
+  }
+}
+
+class RightsError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 403;
+  }
 }
 
 module.exports = {
-  getValidationError, getNotFoundError, getDefaultError, getWrongData,
+  NotFoundError, ValidationError, WrongData, DefaultError, AuthorizationError, RightsError,
 };
