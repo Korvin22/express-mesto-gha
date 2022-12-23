@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { errors } = require('celebrate');
 const { celebrate, Joi } = require('celebrate');
 
 const {
@@ -28,4 +29,5 @@ router.delete('/:cardId/likes', celebrate({
   }),
 }), dislikeCard);
 
+router.use(errors()); // обработчик ошибок celebrate
 module.exports = router;

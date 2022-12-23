@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { errors } = require('celebrate');
 const { celebrate, Joi } = require('celebrate');
 const {
   getAllUsers, getUser, createUser, updateUser, updateAvatar, getCurrentUser,
@@ -33,5 +34,5 @@ router.patch('/me/avatar', celebrate({
   }),
 }), updateAvatar);
 
-router.use((req, res) => res.status(404).send({ message: 'Роут не найден' }));
+router.use(errors()); // обработчик ошибок celebrate
 module.exports = router;
