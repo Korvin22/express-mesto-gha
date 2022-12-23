@@ -20,7 +20,6 @@ const app = express();
 
 /* app.use(express.static(path.join(__dirnamey, 'public'))); */
 app.use(bodyParser.json());
-app.use(errors()); // обработчик ошибок celebrate
 
 app.use('/users', checkAuth, routerUsers);
 app.use('/cards', checkAuth, routerCards);
@@ -35,8 +34,8 @@ app.post('/signin', celebrate({
 }), login);
 app.post('/signup', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
     avatar: Joi.string().min(2),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
@@ -59,6 +58,7 @@ app.use((err, req, res, next) => {
 
 routerUsers.use((req, res) => { throw new NotFoundError('Роут не найден'); });
 routerCards.use((req, res) => { throw new NotFoundError('Роут не найден'); });
+app.use(errors()); // обработчик ошибок celebrate
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
 }, () => {
