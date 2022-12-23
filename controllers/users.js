@@ -70,7 +70,7 @@ const createUser = async (req, res, next) => {
     return res.status(200).send({ _id: user._id });
   } catch (e) {
     console.log(e);
-    if (e.name === 'ValidationError') {
+    if (e.name === 'ValidationError' || e.name === 'CastError') {
       next(new ValidationError('Данные введены не корректно'));
       return;
     }
@@ -130,6 +130,10 @@ const login = async (req, res, next) => {
       return res.status(200).json({ token });
     }
   } catch (e) {
+    if (e.name === 'ValidationError' || e.name === 'CastError') {
+      next(new ValidationError('Данные введены не корректно'));
+      return;
+    }
     next(e);
   }
 };
